@@ -1,0 +1,26 @@
+{
+  "extends": [
+    "airbnb-base",
+    "prettier"
+  ],
+  "plugins": ["prettier", "import"],
+  "rules": {
+    "prettier/prettier": ["error"],
+    "no-unused-vars": "warn",
+    "no-console": ["warn", { "allow": ["log", "error", "warn"] }],
+    "import/extensions": [
+      "error",
+      "ignorePackages",
+      {
+        "js": "never"
+      }
+    ]
+  },
+  "parserOptions": {
+    "ecmaVersion": 2021
+  },
+  "env": {
+    "node": true,
+    "es2021": true
+  }
+}
