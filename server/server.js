@@ -18,17 +18,19 @@ const authRoutes = require('./routes/auth');
 const userRoutes = require('./routes/user');
 const storeRoutes = require('./routes/store');
 const availabilityRoutes = require('./routes/availability');
+const appointmentRoutes = require('./routes/appointment');
 
 app.use('/api', testRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/stores', storeRoutes);
 app.use('/api/availability', availabilityRoutes);
+app.use('/api/appointments', appointmentRoutes);
 
 const PORT = process.env.PORT || 5000;
 
 // Sync database and start server
-sequelize.sync({ alter: true }).then(() => {
+sequelize.sync({ alter: false }).then(() => {
   const startServer = (port) => {
     app.listen(port)
       .on('listening', () => {
