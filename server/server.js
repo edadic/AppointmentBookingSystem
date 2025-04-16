@@ -16,10 +16,12 @@ app.use(express.json());
 const testRoutes = require('./routes/test');
 const authRoutes = require('./routes/auth');
 const userRoutes = require('./routes/user');
+const storeRoutes = require('./routes/store');
 
 app.use('/api', testRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/stores', storeRoutes);
 
 const PORT = process.env.PORT || 5000;
 
