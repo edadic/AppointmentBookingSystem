@@ -1,7 +1,8 @@
 const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
-const { sequelize, testConnection } = require('./utils/database');
+const { sequelize } = require('./utils/database');
+const User = require('./models/User');
 
 dotenv.config();
 
@@ -11,31 +12,42 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Set sequelize instance
-app.set('sequelize', sequelize);
-
 // Routes
 const testRoutes = require('./routes/test');
-app.use('/api', testRoutes);
+const authRoutes = require('./routes/auth');
+const userRoutes = require('./routes/user');
+const storeRoutes = require('./routes/store');
+const availabilityRoutes = require('./routes/availability');
+const appointmentRoutes = require('./routes/appointment');
 
-app.get('/', (req, res) => {
-  res.send('API is running...');
-});
+app.use('/api', testRoutes);
+app.use('/api/auth', authRoutes);
+app.use('/api/users', userRoutes);
+app.use('/api/stores', storeRoutes);
+app.use('/api/availability', availabilityRoutes);
+app.use('/api/appointments', appointmentRoutes);
 
 const PORT = process.env.PORT || 5000;
 
-// Test DB connection before starting server
-testConnection().then(() => {
-  const server = app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
-  }).on('error', (err) => {
-    if (err.code === 'EADDRINUSE') {
-      console.log(`Port ${PORT} is busy, trying ${PORT + 1}`);
-      app.listen(PORT + 1, () => {
-        console.log(`Server is running on port ${PORT + 1}`);
+// Sync database and start server
+sequelize.sync({ alter: false})
+.then(() => {
+  const startServer = (port) => {
+    app.listen(port)
+      .on('listening', () => {
+        console.log(`Server is running on port ${port}`);
+      })
+      .on('error', (err) => {
+        if (err.code === 'EADDRINUSE') {
+          console.log(`Port ${port} is busy, trying ${port + 1}`);
+          startServer(port + 1);
+        } else {
+          console.error('Server error:', err);
+        }
       });
-    } else {
-      console.error('Server error:', err);
-    }
-  });
+  };
+
+  startServer(PORT);
+}).catch(err => {
+  console.error('Error syncing database:', err);
 });
