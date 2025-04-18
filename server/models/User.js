@@ -10,7 +10,10 @@ const User = sequelize.define('User', {
   email: {
     type: DataTypes.STRING,
     allowNull: false,
-    unique: true,
+    unique: {
+      name: 'email_unique',
+      msg: 'Email already exists'
+    },
     validate: {
       isEmail: true,
     },
@@ -28,10 +31,14 @@ const User = sequelize.define('User', {
     defaultValue: false,
   }
 }, {
-  // This will automatically add the createdAt and updatedAt fields
   timestamps: true,
-  // If you want to keep your snake_case naming
-  underscored: true
+  underscored: true,
+  indexes: [
+    {
+      unique: true,
+      fields: ['email']
+    }
+  ]
 });
 
 module.exports = User;

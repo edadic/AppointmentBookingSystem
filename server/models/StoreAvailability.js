@@ -2,7 +2,7 @@ const { DataTypes } = require('sequelize');
 const { sequelize } = require('../utils/database');
 const Store = require('./Store');
 
-const StoreAvailability = sequelize.define('StoreAvailability', {
+const StoreAvailability = sequelize.define('store_availability', { 
   id: {
     type: DataTypes.INTEGER,
     primaryKey: true,
@@ -33,7 +33,8 @@ const StoreAvailability = sequelize.define('StoreAvailability', {
   }
 }, {
   timestamps: true,
-  underscored: true
+  underscored: true,
+  tableName: 'store_availability'  // Added explicit table name
 });
 
 StoreAvailability.belongsTo(Store, { foreignKey: 'store_id' });

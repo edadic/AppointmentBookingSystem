@@ -30,7 +30,8 @@ app.use('/api/appointments', appointmentRoutes);
 const PORT = process.env.PORT || 5000;
 
 // Sync database and start server
-sequelize.sync({ alter: false }).then(() => {
+sequelize.sync({ alter: false})
+.then(() => {
   const startServer = (port) => {
     app.listen(port)
       .on('listening', () => {
