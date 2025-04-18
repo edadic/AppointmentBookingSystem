@@ -6,7 +6,14 @@ const StoreAvailability = require('../models/StoreAvailability');
 const { sendEmail, emailTemplates } = require('../utils/emailService');
 
 const isTimeWithinAvailability = async (storeId, appointmentTime) => {
-  const weekday = new Date(appointmentTime).toLocaleString('en-US', { weekday: 'long' });
+  const now = new Date();
+  const appointmentDate = new Date(appointmentTime);
+  
+  if (appointmentDate < now) {
+    return false;
+  }
+
+  const weekday = appointmentDate.toLocaleString('en-US', { weekday: 'long' });
   const time = appointmentTime.split('T')[1].substring(0, 8);
 
   const availability = await StoreAvailability.findOne({
@@ -21,13 +28,51 @@ const isTimeWithinAvailability = async (storeId, appointmentTime) => {
   return !!availability;
 };
 
+const isTimeSlotAvailable = async (storeId, appointmentTime, durationMinutes) => {
+  const startTime = new Date(appointmentTime);
+  const endTime = new Date(startTime.getTime() + durationMinutes * 60000);
+
+  const existingAppointment = await Appointment.findOne({
+    where: {
+      store_id: storeId,
+      status: 'approved',
+      appointment_time: {
+        [Op.between]: [startTime, endTime]
+      }
+    }
+  });
+
+  return !existingAppointment;
+};
+
 exports.createAppointment = async (req, res) => {
   try {
     const { store_id, appointment_time, duration_minutes } = req.body;
 
+    // Existing date validation
+    const now = new Date();
+    const appointmentDate = new Date(appointment_time);
+    
+    if (appointmentDate < now) {
+      return res.status(400).json({ 
+        message: 'Cannot create appointments in the past' 
+      });
+    }
+
+    // Check store availability
     const isAvailable = await isTimeWithinAvailability(store_id, appointment_time);
     if (!isAvailable) {
-      return res.status(400).json({ message: 'Store is not available at this time' });
+      return res.status(400).json({ 
+        message: 'Store is not available at this time or the appointment time is in the past' 
+      });
+    }
+
+    // Check for overlapping appointments
+    const isSlotAvailable = await isTimeSlotAvailable(store_id, appointment_time, duration_minutes);
+    if (!isSlotAvailable) {
+      return res.status(400).json({ 
+        message: 'This time slot is already booked' 
+      });
     }
 
     const appointment = await Appointment.create({
@@ -37,11 +82,9 @@ exports.createAppointment = async (req, res) => {
       duration_minutes,
     });
 
-    // Fetch user and store details for email
     const user = await User.findByPk(req.user.userId);
     const store = await Store.findByPk(store_id);
 
-    // Send confirmation email
     await sendEmail(
       user.email,
       emailTemplates.appointmentRequested(appointment, user.full_name, store.name)
@@ -107,7 +150,6 @@ exports.updateAppointmentStatus = async (req, res) => {
       console.log('Email sent successfully');
     } catch (emailError) {
       console.error('Failed to send email:', emailError);
-      // Continue with the response even if email fails
     }
 
     res.json(appointment);
