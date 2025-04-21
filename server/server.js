@@ -8,11 +8,14 @@ dotenv.config();
 
 const app = express();
 
-// Middleware
-app.use(cors());
-app.use(express.json());
+app.use(cors({
+  origin: ['http://localhost:5173', 'http://127.0.0.1:5173'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true
+}));
 
-// Routes
+app.use(express.json());
 const testRoutes = require('./routes/test');
 const authRoutes = require('./routes/auth');
 const userRoutes = require('./routes/user');
@@ -28,8 +31,6 @@ app.use('/api/availability', availabilityRoutes);
 app.use('/api/appointments', appointmentRoutes);
 
 const PORT = process.env.PORT || 5000;
-
-// Sync database and start server
 sequelize.sync({ alter: false})
 .then(() => {
   const startServer = (port) => {
