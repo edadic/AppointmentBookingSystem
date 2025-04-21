@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { getStores, createStore, updateStore, deleteStore } from '../services/storeService';
 import { getAvailability, setAvailability } from '../services/availabilityService';
+import { getStoreAppointments, updateAppointmentStatus } from '../services/appointmentService';
 
 const StoreDashboard = () => {
   const [stores, setStores] = useState([]);
@@ -18,6 +19,8 @@ const StoreDashboard = () => {
   const [availabilityData, setAvailabilityData] = useState([]);
   const [showAvailabilityForm, setShowAvailabilityForm] = useState(false);
   const [selectedStoreId, setSelectedStoreId] = useState(null);
+  const [storeAppointments, setStoreAppointments] = useState({});
+  const [expandedStores, setExpandedStores] = useState({});
 
   useEffect(() => {
     fetchStores();
@@ -126,6 +129,40 @@ const StoreDashboard = () => {
       } catch (err) {
         setError(err.message);
       }
+    }
+  };
+
+  const fetchStoreAppointments = async (storeId) => {
+    try {
+      const data = await getStoreAppointments(storeId);
+      setStoreAppointments(prevAppointments => ({
+        ...prevAppointments,
+        [storeId]: data
+      }));
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
+  const handleStatusUpdate = async (storeId, appointmentId, status) => {
+    try {
+      await updateAppointmentStatus(appointmentId, status);
+      // Refresh only the appointments for this specific store
+      fetchStoreAppointments(storeId);
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
+  const toggleStoreExpansion = (storeId) => {
+    setExpandedStores(prev => ({
+      ...prev,
+      [storeId]: !prev[storeId]
+    }));
+    
+    // Fetch appointments if not already loaded
+    if (!storeAppointments[storeId]) {
+      fetchStoreAppointments(storeId);
     }
   };
 
@@ -281,36 +318,92 @@ const StoreDashboard = () => {
         </div>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="space-y-6">
         {stores.map((store) => (
-          <div key={store.id} className="bg-white rounded-lg shadow-lg p-6">
-            <h3 className="text-xl font-semibold mb-2">{store.name}</h3>
-            <p className="text-gray-600 mb-2">{store.address}</p>
-            <p className="text-gray-600 mb-2">{store.phone}</p>
-            <p className="text-gray-600 mb-4">{store.description}</p>
-            <button
-              onClick={() => {
-                setShowAvailabilityForm(true);
-                fetchAvailability(store.id);
-              }}
-              className="text-blue-600 hover:text-blue-800"
+          <div key={store.id} className="bg-white rounded-lg shadow-lg overflow-hidden">
+            <div 
+              className="p-6 cursor-pointer"
+              onClick={() => toggleStoreExpansion(store.id)}
             >
-              Set Availability
-            </button>
-            <div className="flex justify-end space-x-2">
-              <button
-                onClick={() => handleEdit(store)}
-                className="text-blue-600 hover:text-blue-800"
-              >
-                Edit
-              </button>
-              <button
-                onClick={() => handleDelete(store.id)}
-                className="text-red-600 hover:text-red-800"
-              >
-                Delete
-              </button>
+              <div className="flex justify-between items-center">
+                <h3 className="text-xl font-semibold">{store.name}</h3>
+                <div className="flex items-center space-x-4">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setShowAvailabilityForm(true);
+                      fetchAvailability(store.id);
+                    }}
+                    className="text-blue-600 hover:text-blue-800"
+                  >
+                    Set Availability
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleEdit(store);
+                    }}
+                    className="text-blue-600 hover:text-blue-800"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDelete(store.id);
+                    }}
+                    className="text-red-600 hover:text-red-800"
+                  >
+                    Delete
+                  </button>
+                </div>
+              </div>
+              <p className="text-gray-600 mt-2">{store.address}</p>
+              <p className="text-gray-600">{store.phone}</p>
+              <p className="text-gray-600 mt-2">{store.description}</p>
             </div>
+            
+            {expandedStores[store.id] && (
+              <div className="border-t p-4 bg-gray-50">
+                <h4 className="font-semibold text-lg mb-3">Appointment Requests</h4>
+                {storeAppointments[store.id]?.length > 0 ? (
+                  <div className="space-y-3">
+                    {storeAppointments[store.id].map(appointment => (
+                      <div key={appointment.id} className="bg-white p-3 rounded shadow">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <h5 className="font-medium">{appointment.User?.full_name}</h5>
+                            <p className="text-sm text-gray-600">{new Date(appointment.appointment_time).toLocaleString()}</p>
+                            <p className="text-sm">Status: <span className={`font-medium ${
+                              appointment.status === 'approved' ? 'text-green-600' : 
+                              appointment.status === 'rejected' ? 'text-red-600' : 'text-yellow-600'
+                            }`}>{appointment.status}</span></p>
+                          </div>
+                          {appointment.status === 'pending' && (
+                            <div className="space-x-2">
+                              <button 
+                                onClick={() => handleStatusUpdate(store.id, appointment.id, 'approved')}
+                                className="bg-green-500 text-white px-3 py-1 rounded text-sm"
+                              >
+                                Accept
+                              </button>
+                              <button 
+                                onClick={() => handleStatusUpdate(store.id, appointment.id, 'rejected')}
+                                className="bg-red-500 text-white px-3 py-1 rounded text-sm"
+                              >
+                                Reject
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-gray-500">No appointment requests for this store.</p>
+                )}
+              </div>
+            )}
           </div>
         ))}
       </div>
