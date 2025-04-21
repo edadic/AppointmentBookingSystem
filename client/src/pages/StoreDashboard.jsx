@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { getStores, createStore, updateStore, deleteStore } from '../services/storeService';
+import { getAvailability, setAvailability } from '../services/availabilityService';
 
 const StoreDashboard = () => {
   const [stores, setStores] = useState([]);
@@ -12,8 +13,11 @@ const StoreDashboard = () => {
     address: '',
     phone: '',
     description: '',
-    email: '' // Add email field
+    email: ''
   });
+  const [availabilityData, setAvailabilityData] = useState([]);
+  const [showAvailabilityForm, setShowAvailabilityForm] = useState(false);
+  const [selectedStoreId, setSelectedStoreId] = useState(null);
 
   useEffect(() => {
     fetchStores();
@@ -27,6 +31,43 @@ const StoreDashboard = () => {
     } catch (err) {
       setError(err.message);
       setIsLoading(false);
+    }
+  };
+
+  const fetchAvailability = async (storeId) => {
+    try {
+      const data = await getAvailability(storeId);
+      setAvailabilityData(data.length > 0 ? data : [{ weekday: '', start_time: '', end_time: '' }]);
+      setSelectedStoreId(storeId);
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
+  const handleAddTimeSlot = () => {
+    setAvailabilityData([
+      ...availabilityData,
+      { weekday: '', start_time: '', end_time: '' }
+    ]);
+  };
+
+  const handleAvailabilityChange = (index, field, value) => {
+    const newAvailability = [...availabilityData];
+    newAvailability[index] = {
+      ...newAvailability[index],
+      [field]: value
+    };
+    setAvailabilityData(newAvailability);
+  };
+
+  const handleAvailabilitySubmit = async (e) => {
+    e.preventDefault();
+    try {
+      await setAvailability(selectedStoreId, availabilityData);
+      setShowAvailabilityForm(false);
+      setError('');
+    } catch (err) {
+      setError(err.message);
     }
   };
 
@@ -45,12 +86,10 @@ const StoreDashboard = () => {
       if (editingStore) {
         await updateStore(editingStore.id, formData);
       } else {
-        console.log('Sending store data:', formData);
         const result = await createStore(formData);
         if (!result) {
           throw new Error('No response from server');
         }
-        console.log('Store created successfully:', result);
       }
       await fetchStores();
       setShowForm(false);
@@ -63,11 +102,6 @@ const StoreDashboard = () => {
         email: ''
       });
     } catch (err) {
-      console.error('Store creation error details:', {
-        message: err.message,
-        response: err.response?.data,
-        status: err.response?.status
-      });
       setError(err.message || 'Failed to create store');
     }
   };
@@ -79,7 +113,7 @@ const StoreDashboard = () => {
       address: store.address,
       phone: store.phone,
       description: store.description,
-      email: store.email || '' // Add email field
+      email: store.email || ''
     });
     setShowForm(true);
   };
@@ -105,7 +139,7 @@ const StoreDashboard = () => {
           onClick={() => {
             setShowForm(true);
             setEditingStore(null);
-            setFormData({ name: '', address: '', phone: '', description: '' });
+            setFormData({ name: '', address: '', phone: '', description: '', email: '' });
           }}
           className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
         >
@@ -198,6 +232,55 @@ const StoreDashboard = () => {
         </div>
       )}
 
+      {showAvailabilityForm && (
+        <div className="bg-white p-6 rounded-lg shadow-lg mb-6">
+          <h2 className="text-xl font-semibold mb-4">Set Availability</h2>
+          <form onSubmit={handleAvailabilitySubmit}>
+            {availabilityData.map((slot, index) => (
+              <div key={index} className="mb-4 p-4 border rounded">
+                <select
+                  value={slot.weekday}
+                  onChange={(e) => handleAvailabilityChange(index, 'weekday', e.target.value)}
+                  className="block w-full mb-2 p-2 border rounded"
+                >
+                  <option value="">Select Day</option>
+                  {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map(day => (
+                    <option key={day} value={day}>{day}</option>
+                  ))}
+                </select>
+                <div className="flex gap-2">
+                  <input
+                    type="time"
+                    value={slot.start_time}
+                    onChange={(e) => handleAvailabilityChange(index, 'start_time', e.target.value)}
+                    className="block w-full p-2 border rounded"
+                  />
+                  <input
+                    type="time"
+                    value={slot.end_time}
+                    onChange={(e) => handleAvailabilityChange(index, 'end_time', e.target.value)}
+                    className="block w-full p-2 border rounded"
+                  />
+                </div>
+              </div>
+            ))}
+            <button
+              type="button"
+              onClick={handleAddTimeSlot}
+              className="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-300 mr-2"
+            >
+              Add Time Slot
+            </button>
+            <button
+              type="submit"
+              className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+            >
+              Save Availability
+            </button>
+          </form>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {stores.map((store) => (
           <div key={store.id} className="bg-white rounded-lg shadow-lg p-6">
@@ -205,6 +288,15 @@ const StoreDashboard = () => {
             <p className="text-gray-600 mb-2">{store.address}</p>
             <p className="text-gray-600 mb-2">{store.phone}</p>
             <p className="text-gray-600 mb-4">{store.description}</p>
+            <button
+              onClick={() => {
+                setShowAvailabilityForm(true);
+                fetchAvailability(store.id);
+              }}
+              className="text-blue-600 hover:text-blue-800"
+            >
+              Set Availability
+            </button>
             <div className="flex justify-end space-x-2">
               <button
                 onClick={() => handleEdit(store)}
