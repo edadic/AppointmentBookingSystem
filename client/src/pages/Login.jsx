@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { login } from '../services/authService';
+import { jwtDecode } from 'jwt-decode'; // Add this import
 
 const Login = () => {
   const navigate = useNavigate();
@@ -30,7 +31,10 @@ const Login = () => {
     try {
       const response = await login(formData);
       if (response.token) {
-        navigate('/dashboard');
+        // Use jwtDecode instead of jwt_decode
+        const decoded = jwtDecode(response.token);
+        // Redirect based on user role
+        navigate(decoded.isStoreOwner ? '/store-dashboard' : '/user-dashboard');
       }
     } catch (err) {
       setError(err.message || 'Login failed');
