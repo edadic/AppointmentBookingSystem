@@ -2,13 +2,26 @@ const Store = require('../models/Store');
 
 exports.createStore = async (req, res) => {
   try {
+    console.log('Request body:', req.body); // Debug log
+
+    // Ensure all required fields are present
+    if (!req.body.name || !req.body.location || !req.body.contact_email || !req.body.phone_number) {
+      return res.status(400).json({ 
+        message: 'All fields are required: Name, Location, Contact Email, and Phone Number' 
+      });
+    }
+
     const store = await Store.create({
       ...req.body,
       user_id: req.user.userId
     });
+
     res.status(201).json(store);
   } catch (error) {
-    res.status(400).json({ message: 'Error creating store', error: error.message });
+    console.error('Store creation error:', error); // Debug log
+    res.status(400).json({ 
+      message: error.message || 'Error creating store'
+    });
   }
 };
 
