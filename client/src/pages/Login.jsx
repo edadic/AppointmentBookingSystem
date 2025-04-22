@@ -31,10 +31,9 @@ const Login = () => {
     try {
       const response = await login(formData);
       if (response.token) {
-        // Use jwtDecode instead of jwt_decode
         const decoded = jwtDecode(response.token);
-        // Redirect based on user role
-        navigate(decoded.isStoreOwner ? '/store-dashboard' : '/user-dashboard');
+        // Redirect store owners to store dashboard, regular users to homepage
+        navigate(decoded.isStoreOwner ? '/store-dashboard' : '/');
       }
     } catch (err) {
       setError(err.message || 'Login failed');

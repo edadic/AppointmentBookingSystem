@@ -3,7 +3,9 @@ import Register from './pages/Register';
 import Login from './pages/Login';
 import UserDashboard from './pages/UserDashboard';
 import StoreDashboard from './pages/StoreDashboard';
+import HomePage from './pages/HomePage';
 import ProtectedRoute from './components/ProtectedRoute';
+import Navigation from './components/Navigation';
 
 function App() {
   return (
@@ -11,11 +13,19 @@ function App() {
       <Routes>
         <Route path="/register" element={<Register />} />
         <Route path="/login" element={<Login />} />
-        <Route path="/" element={<Login />} />
         
         {/* Protected Routes */}
         <Route
-          path="/user-dashboard"
+          path="/"
+          element={
+            <ProtectedRoute allowedRoles={['user']}>
+              <HomePage />
+            </ProtectedRoute>
+          }
+        />
+        
+        <Route
+          path="/appointments"
           element={
             <ProtectedRoute allowedRoles={['user']}>
               <UserDashboard />
