@@ -2,6 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Navigation from '../components/Navigation';
 import axios from 'axios';
+import FullCalendar from '@fullcalendar/react';
+import dayGridPlugin from '@fullcalendar/daygrid';
+import timeGridPlugin from '@fullcalendar/timegrid';
+import interactionPlugin from '@fullcalendar/interaction';
 
 const API_URL = 'http://localhost:5001/api';
 
@@ -14,6 +18,8 @@ const BookAppointment = () => {
   const [selectedTime, setSelectedTime] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(true);
+  const [showCalendar, setShowCalendar] = useState(false);
+  const [availableSlots, setAvailableSlots] = useState([]);
 
   useEffect(() => {
     const fetchStoreDetails = async () => {
@@ -39,6 +45,31 @@ const BookAppointment = () => {
 
     fetchStoreDetails();
   }, [storeId]);
+
+  useEffect(() => {
+    if (availability.length > 0) {
+      const slots = availability.map(slot => ({
+        daysOfWeek: [getDayNumber(slot.weekday)],
+        startTime: slot.start_time,
+        endTime: slot.end_time,
+      }));
+      setAvailableSlots(slots);
+    }
+  }, [availability]);
+
+  const getDayNumber = (weekday) => {
+    const days = {
+      'Sunday': 0, 'Monday': 1, 'Tuesday': 2, 'Wednesday': 3,
+      'Thursday': 4, 'Friday': 5, 'Saturday': 6
+    };
+    return days[weekday];
+  };
+
+  const handleDateSelect = (selectInfo) => {
+    const selectedDateTime = selectInfo.start;
+    setSelectedDate(selectedDateTime.toISOString().split('T')[0]);
+    setSelectedTime(selectedDateTime.toTimeString().slice(0, 5));
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -111,6 +142,40 @@ const BookAppointment = () => {
                   {error}
                 </div>
               )}
+              
+              <button
+                onClick={() => setShowCalendar(!showCalendar)}
+                className="mb-4 inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              >
+                {showCalendar ? 'Hide Calendar' : 'Show Calendar'}
+              </button>
+
+              {showCalendar && (
+                <div className="mb-6">
+                  <FullCalendar
+                    plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
+                    initialView="timeGridWeek"
+                    selectable={true}
+                    selectMirror={true}
+                    dayMaxEvents={true}
+                    weekends={true}
+                    businessHours={availableSlots}
+                    selectConstraint="businessHours"
+                    select={handleDateSelect}
+                    headerToolbar={{
+                      left: 'prev,next today',
+                      center: 'title',
+                      right: 'dayGridMonth,timeGridWeek'
+                    }}
+                    height="auto"
+                    slotMinTime="08:00:00"
+                    slotMaxTime="21:00:00"
+                    //expandRows={true}
+                    slotDuration="01:00:00"
+                  />
+                </div>
+              )}
+
               <form onSubmit={handleSubmit} className="mt-4 space-y-4">
                 <div>
                   <label htmlFor="date" className="block text-sm font-medium text-gray-700">
