@@ -28,7 +28,7 @@ exports.createStore = async (req, res) => {
 exports.getStores = async (req, res) => {
   try {
     const stores = await Store.findAll({
-      where: { user_id: req.user.userId }
+      where: req.user.isStoreOwner ? { user_id: req.user.userId } : {}
     });
     res.json(stores);
   } catch (error) {
