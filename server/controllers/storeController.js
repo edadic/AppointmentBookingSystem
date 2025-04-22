@@ -40,13 +40,15 @@ exports.getStore = async (req, res) => {
   try {
     const store = await Store.findOne({
       where: { 
-        id: req.params.id,
-        user_id: req.user.userId
+        id: req.params.id
+        // Remove user_id filter to allow any user to view any store
       }
     });
+    
     if (!store) {
       return res.status(404).json({ message: 'Store not found' });
     }
+    
     res.json(store);
   } catch (error) {
     res.status(500).json({ message: 'Error fetching store', error: error.message });

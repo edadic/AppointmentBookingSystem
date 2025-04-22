@@ -1,28 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import Navigation from '../components/Navigation';
-import { getStores, createStore, updateStore, deleteStore } from '../services/storeService';
-import { getAvailability, setAvailability } from '../services/availabilityService';
+import { getStores } from '../services/storeService';
 import { getStoreAppointments, updateAppointmentStatus } from '../services/appointmentService';
 
 const StoreDashboard = () => {
   const [stores, setStores] = useState([]);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(true);
-  const [showForm, setShowForm] = useState(false);
-  const [editingStore, setEditingStore] = useState(null);
-  const [formData, setFormData] = useState({
-    name: '',
-    address: '',
-    phone: '',
-    description: '',
-    email: ''
-  });
-  const [availabilityData, setAvailabilityData] = useState([]);
-  const [showAvailabilityForm, setShowAvailabilityForm] = useState(false);
-  const [selectedStoreId, setSelectedStoreId] = useState(null);
   const [storeAppointments, setStoreAppointments] = useState({});
   const [expandedStores, setExpandedStores] = useState({});
-  const [activeTab, setActiveTab] = useState(null);
 
   useEffect(() => {
     fetchStores();
@@ -156,7 +142,7 @@ const StoreDashboard = () => {
     }
   };
 
-  const toggleStoreExpansion = (storeId) => {
+  const toggleStoreExpansion = async (storeId) => {
     setExpandedStores(prev => ({
       ...prev,
       [storeId]: !prev[storeId]
@@ -164,7 +150,7 @@ const StoreDashboard = () => {
     
     // Fetch appointments if not already loaded
     if (!storeAppointments[storeId]) {
-      fetchStoreAppointments(storeId);
+      await fetchStoreAppointments(storeId);
     }
   };
 
@@ -194,232 +180,62 @@ const StoreDashboard = () => {
     <>
       <Navigation />
       <div className="container mx-auto px-4 py-8">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-bold text-gray-900">My Stores</h1>
-          <button
-            onClick={() => {
-              setShowForm(true);
-              setEditingStore(null);
-              setFormData({ name: '', address: '', phone: '', description: '', email: '' });
-            }}
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
-          >
-            Add New Store
-          </button>
-        </div>
-
+        <h1 className="text-3xl font-bold text-gray-900 mb-6">Store Dashboard</h1>
+        
         {error && (
           <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4">
             {error}
           </div>
         )}
 
-        {showForm && (
-          <div className="bg-white p-6 rounded-lg shadow-lg mb-6">
-            <h2 className="text-xl font-semibold mb-4">
-              {editingStore ? 'Edit Store' : 'Add New Store'}
-            </h2>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Name</label>
-                <input
-                  type="text"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleInputChange}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Address</label>
-                <input
-                  type="text"
-                  name="address"
-                  value={formData.address}
-                  onChange={handleInputChange}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Phone</label>
-                <input
-                  type="tel"
-                  name="phone"
-                  value={formData.phone}
-                  onChange={handleInputChange}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Email</label>
-                <input
-                  type="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleInputChange}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Description</label>
-                <textarea
-                  name="description"
-                  value={formData.description}
-                  onChange={handleInputChange}
-                  rows="3"
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                />
-              </div>
-              <div className="flex justify-end space-x-3">
-                <button
-                  type="button"
-                  onClick={() => setShowForm(false)}
-                  className="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-300"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
-                >
-                  {editingStore ? 'Update Store' : 'Create Store'}
-                </button>
-              </div>
-            </form>
-          </div>
-        )}
-
-        {showAvailabilityForm && (
-          <div className="bg-white p-6 rounded-lg shadow-lg mb-6">
-            <h2 className="text-xl font-semibold mb-4">Set Availability</h2>
-            <form onSubmit={handleAvailabilitySubmit}>
-              {availabilityData.map((slot, index) => (
-                <div key={index} className="mb-4 p-4 border rounded">
-                  <select
-                    value={slot.weekday}
-                    onChange={(e) => handleAvailabilityChange(index, 'weekday', e.target.value)}
-                    className="block w-full mb-2 p-2 border rounded"
-                  >
-                    <option value="">Select Day</option>
-                    {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map(day => (
-                      <option key={day} value={day}>{day}</option>
-                    ))}
-                  </select>
-                  <div className="flex gap-2">
-                    <input
-                      type="time"
-                      value={slot.start_time}
-                      onChange={(e) => handleAvailabilityChange(index, 'start_time', e.target.value)}
-                      className="block w-full p-2 border rounded"
-                    />
-                    <input
-                      type="time"
-                      value={slot.end_time}
-                      onChange={(e) => handleAvailabilityChange(index, 'end_time', e.target.value)}
-                      className="block w-full p-2 border rounded"
-                    />
-                  </div>
-                </div>
-              ))}
-              <button
-                type="button"
-                onClick={handleAddTimeSlot}
-                className="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-300 mr-2"
-              >
-                Add Time Slot
-              </button>
-              <button
-                type="submit"
-                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
-              >
-                Save Availability
-              </button>
-            </form>
-          </div>
-        )}
-
-        <div className="space-y-6">
+        <div className="grid gap-6">
           {stores.map((store) => (
-            <div 
-              key={store.id} 
-              className={`bg-white rounded-lg shadow-lg p-6 cursor-pointer ${
-                activeTab === store.id ? 'ring-2 ring-blue-500' : ''
-              }`}
-              onClick={() => handleStoreClick(store.id)}
-            >
-              <div 
-                className="p-6 cursor-pointer"
-                onClick={() => toggleStoreExpansion(store.id)}
-              >
-                <div className="flex justify-between items-center">
-                  <h3 className="text-xl font-semibold">{store.name}</h3>
-                  <div className="flex items-center space-x-4">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setShowAvailabilityForm(true);
-                        fetchAvailability(store.id);
-                      }}
-                      className="text-blue-600 hover:text-blue-800"
-                    >
-                      Set Availability
-                    </button>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleEdit(store);
-                      }}
-                      className="text-blue-600 hover:text-blue-800"
-                    >
-                      Edit
-                    </button>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleDelete(store.id);
-                      }}
-                      className="text-red-600 hover:text-red-800"
-                    >
-                      Delete
-                    </button>
-                  </div>
-                </div>
-                <p className="text-gray-600 mt-2">{store.address}</p>
-                <p className="text-gray-600">{store.phone}</p>
-                <p className="text-gray-600 mt-2">{store.description}</p>
+            <div key={store.id} className="bg-white rounded-lg shadow-lg p-6">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-2xl font-semibold text-gray-800">{store.name}</h2>
+                <button
+                  onClick={() => toggleStoreExpansion(store.id)}
+                  className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+                >
+                  {expandedStores[store.id] ? 'Hide Appointments' : 'Show Appointments'}
+                </button>
               </div>
-              
+
               {expandedStores[store.id] && (
-                <div className="border-t p-4 bg-gray-50">
-                  <h4 className="font-semibold text-lg mb-3">Appointment Requests</h4>
-                  {activeTab && storeAppointments[activeTab]?.length > 0 ? (
+                <div className="mt-4">
+                  <h3 className="text-xl font-semibold mb-4">Upcoming Appointments</h3>
+                  {storeAppointments[store.id]?.length > 0 ? (
                     <div className="space-y-4">
-                      {storeAppointments[activeTab].map(appointment => (
-                        <div key={appointment.id} className="bg-white p-3 rounded shadow">
-                          <div className="flex justify-between items-start">
+                      {storeAppointments[store.id].map((appointment) => (
+                        <div key={appointment.id} className="border rounded-lg p-4">
+                          <div className="flex justify-between items-center">
                             <div>
-                              <h5 className="font-medium">{appointment.User?.full_name}</h5>
-                              <p className="text-sm text-gray-600">{new Date(appointment.appointment_time).toLocaleString()}</p>
-                              <p className="text-sm">Status: <span className={`font-medium ${
-                                appointment.status === 'approved' ? 'text-green-600' : 
-                                appointment.status === 'rejected' ? 'text-red-600' : 'text-yellow-600'
-                              }`}>{appointment.status}</span></p>
+                              <p className="font-semibold">{appointment.User?.full_name}</p>
+                              <p className="text-gray-600">
+                                Date: {new Date(appointment.appointment_time).toLocaleDateString()}
+                              </p>
+                              <p className="text-gray-600">
+                                Time: {new Date(appointment.appointment_time).toLocaleTimeString()}
+                              </p>
+                              <p className="text-gray-600">
+                                Status: <span className={`font-semibold ${
+                                  appointment.status === 'pending' ? 'text-yellow-600' :
+                                  appointment.status === 'approved' ? 'text-green-600' :
+                                  'text-red-600'
+                                }`}>{appointment.status}</span>
+                              </p>
                             </div>
                             {appointment.status === 'pending' && (
-                              <div className="space-x-2">
-                                <button 
+                              <div className="flex gap-2">
+                                <button
                                   onClick={() => handleStatusUpdate(store.id, appointment.id, 'approved')}
-                                  className="bg-green-500 text-white px-3 py-1 rounded text-sm"
+                                  className="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700"
                                 >
                                   Accept
                                 </button>
-                                <button 
+                                <button
                                   onClick={() => handleStatusUpdate(store.id, appointment.id, 'rejected')}
-                                  className="bg-red-500 text-white px-3 py-1 rounded text-sm"
+                                  className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700"
                                 >
                                   Reject
                                 </button>
@@ -430,7 +246,7 @@ const StoreDashboard = () => {
                       ))}
                     </div>
                   ) : (
-                    <p>No appointments for this store.</p>
+                    <p className="text-gray-600 text-center">No upcoming appointments.</p>
                   )}
                 </div>
               )}

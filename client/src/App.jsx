@@ -1,3 +1,4 @@
+import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Register from './pages/Register';
 import Login from './pages/Login';
@@ -6,8 +7,11 @@ import StoreDashboard from './pages/StoreDashboard';
 import HomePage from './pages/HomePage';
 import ProtectedRoute from './components/ProtectedRoute';
 import Navigation from './components/Navigation';
+import BookAppointment from './pages/BookAppointment';
+import StoreSettings from './pages/StoreSettings';
+import EditStore from './pages/EditStore'; 
 
-function App() {
+const App = () => {
   return (
     <Router>
       <Routes>
@@ -41,9 +45,36 @@ function App() {
             </ProtectedRoute>
           }
         />
+        
+        <Route
+          path="/store-settings"
+          element={
+            <ProtectedRoute allowedRoles={['store_owner']}>
+              <StoreSettings />
+            </ProtectedRoute>
+          }
+        />
+        
+        <Route
+          path="/edit-store/:storeId"
+          element={
+            <ProtectedRoute allowedRoles={['store_owner']}>
+              <EditStore />
+            </ProtectedRoute>
+          }
+        />
+        
+        <Route
+          path="/book/:storeId"
+          element={
+            <ProtectedRoute allowedRoles={['user']}>
+              <BookAppointment />
+            </ProtectedRoute>
+          }
+        />
       </Routes>
     </Router>
   );
-}
+};
 
 export default App;

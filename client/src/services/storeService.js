@@ -62,6 +62,15 @@ export const updateStore = async (id, storeData) => {
   }
 };
 
+export const getStore = async (id) => {
+  try {
+    const response = await axiosInstance.get(`/${id}`);
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || { message: 'Failed to fetch store' };
+  }
+};
+
 export const getStores = async () => {
   try {
     const response = await axiosInstance.get('/');
