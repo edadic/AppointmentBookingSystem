@@ -32,15 +32,10 @@ exports.setAvailability = async (req, res) => {
 
 exports.getAvailability = async (req, res) => {
   try {
-    const { store_id } = req.params;
+    const { id } = req.params;  // Changed from store_id to id to match route parameter
     
-    const isOwner = await verifyStoreOwnership(store_id, req.user.userId);
-    if (!isOwner) {
-      return res.status(403).json({ message: 'Not authorized to view this store' });
-    }
-
     const availability = await StoreAvailability.findAll({
-      where: { store_id },
+      where: { store_id: id },
       order: [['weekday', 'ASC']]
     });
 

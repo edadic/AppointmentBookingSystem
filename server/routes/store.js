@@ -13,7 +13,7 @@ const router = express.Router();
 // Public routes (protected but not restricted)
 router.use(protect);
 router.get('/', getStores);
-router.get('/:id', getStore);
+router.get('/:id', getStore);  // Make sure this route exists
 
 // Store owner only routes
 router.use(restrictTo('store_owner'));
