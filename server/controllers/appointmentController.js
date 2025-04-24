@@ -198,3 +198,20 @@ exports.getStoreAppointments = async (req, res) => {
     res.status(500).json({ message: 'Error fetching appointments', error: error.message });
   }
 };
+
+// Add this new function to your appointmentController.js
+exports.getStoreBookedSlots = async (req, res) => {
+  try {
+    const { storeId } = req.params;
+    const appointments = await Appointment.findAll({
+      where: {
+        store_id: storeId,
+        status: ['pending', 'approved'] // Only show pending and approved appointments
+      },
+      attributes: ['id', 'appointment_time', 'duration_minutes', 'status']
+    });
+    res.json(appointments);
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching booked slots' });
+  }
+};

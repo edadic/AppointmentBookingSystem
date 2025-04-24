@@ -20,22 +20,37 @@ const BookAppointment = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [showCalendar, setShowCalendar] = useState(false);
   const [availableSlots, setAvailableSlots] = useState([]);
+  const [bookedSlots, setBookedSlots] = useState([]);
 
   useEffect(() => {
     const fetchStoreDetails = async () => {
       try {
         const token = localStorage.getItem('token');
-        const [storeResponse, availabilityResponse] = await Promise.all([
+        const [storeResponse, availabilityResponse, bookedSlotsResponse] = await Promise.all([
           axios.get(`${API_URL}/stores/${storeId}`, {
             headers: { 'Authorization': `Bearer ${token}` }
           }),
           axios.get(`${API_URL}/availability/store/${storeId}`, {
             headers: { 'Authorization': `Bearer ${token}` }
-          })
+          }),
+          axios.get(`${API_URL}/appointments/store/${storeId}/booked`) // New endpoint, no auth required
         ]);
         
         setStore(storeResponse.data);
         setAvailability(availabilityResponse.data);
+        
+        // Map booked slots to calendar events
+        const events = bookedSlotsResponse.data.map(appointment => ({
+          id: appointment.id,
+          start: appointment.appointment_time,
+          end: new Date(new Date(appointment.appointment_time).getTime() + appointment.duration_minutes * 60000),
+          backgroundColor: appointment.status === 'approved' ? '#EF4444' : '#F59E0B',
+          borderColor: appointment.status === 'approved' ? '#DC2626' : '#D97706',
+          display: 'block',
+          title: appointment.status === 'approved' ? 'Booked' : 'Pending'
+        }));
+        setBookedSlots(events);
+        
         setIsLoading(false);
       } catch (err) {
         setError('Failed to fetch store details');
@@ -52,6 +67,7 @@ const BookAppointment = () => {
         daysOfWeek: [getDayNumber(slot.weekday)],
         startTime: slot.start_time,
         endTime: slot.end_time,
+        backgroundColor: '#10B981',
       }));
       setAvailableSlots(slots);
     }
@@ -170,8 +186,20 @@ const BookAppointment = () => {
                     height="auto"
                     slotMinTime="08:00:00"
                     slotMaxTime="21:00:00"
-                    //expandRows={true}
                     slotDuration="01:00:00"
+                    allDaySlot={false}
+                    slotLabelInterval="01:00"
+                    selectOverlap={false}
+                    slotEventOverlap={false}
+                    displayEventTime={true}
+                    nowIndicator={true}
+                    expandRows={true}
+                    selectMinDistance={1}
+                    eventDisplay="block"
+                    events={bookedSlots}
+                    eventContent={(eventInfo) => ({
+                      html: `<div class="text-xs font-semibold">${eventInfo.event.title}</div>`
+                    })}
                   />
                 </div>
               )}

@@ -4,11 +4,16 @@ const {
   createAppointment,
   getUserAppointments,
   getStoreAppointments,
-  updateAppointmentStatus
+  updateAppointmentStatus,
+  getStoreBookedSlots 
 } = require('../controllers/appointmentController');
 
 const router = express.Router();
 
+// Public route - must be before protect middleware
+router.get('/store/:storeId/booked', getStoreBookedSlots);
+
+// Protected routes
 router.use(protect);
 
 // Routes for all authenticated users

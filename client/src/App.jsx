@@ -10,6 +10,7 @@ import Navigation from './components/Navigation';
 import BookAppointment from './pages/BookAppointment';
 import StoreSettings from './pages/StoreSettings';
 import EditStore from './pages/EditStore'; 
+import Profile from './pages/Profile';
 
 const App = () => {
   return (
@@ -69,6 +70,15 @@ const App = () => {
           element={
             <ProtectedRoute allowedRoles={['user']}>
               <BookAppointment />
+            </ProtectedRoute>
+          }
+        />
+        
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute allowedRoles={['user', 'store_owner']}>
+              <Profile />
             </ProtectedRoute>
           }
         />
