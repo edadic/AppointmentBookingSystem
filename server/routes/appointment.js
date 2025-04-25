@@ -5,7 +5,8 @@ const {
   getUserAppointments,
   getStoreAppointments,
   updateAppointmentStatus,
-  getStoreBookedSlots 
+  getStoreBookedSlots,
+  getRecentAppointments 
 } = require('../controllers/appointmentController');
 
 const router = express.Router();
@@ -15,6 +16,9 @@ router.get('/store/:storeId/booked', getStoreBookedSlots);
 
 // Protected routes
 router.use(protect);
+
+// Add the recent appointments route
+router.get('/recent', getRecentAppointments);
 
 // Routes for all authenticated users
 router.post('/', createAppointment);

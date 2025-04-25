@@ -11,6 +11,7 @@ import BookAppointment from './pages/BookAppointment';
 import StoreSettings from './pages/StoreSettings';
 import EditStore from './pages/EditStore'; 
 import Profile from './pages/Profile';
+import Notifications from './components/Notifications';
 
 const App = () => {
   return (
@@ -79,6 +80,15 @@ const App = () => {
           element={
             <ProtectedRoute allowedRoles={['user', 'store_owner']}>
               <Profile />
+            </ProtectedRoute>
+          }
+        />
+        
+        <Route
+          path="/notifications"
+          element={
+            <ProtectedRoute allowedRoles={['user', 'store_owner']}>
+              <Notifications />
             </ProtectedRoute>
           }
         />

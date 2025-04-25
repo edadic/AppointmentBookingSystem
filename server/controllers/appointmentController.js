@@ -199,14 +199,64 @@ exports.getStoreAppointments = async (req, res) => {
   }
 };
 
-// Add this new function to your appointmentController.js
+exports.getRecentAppointments = async (req, res) => {
+  try {
+    const threeDaysFromNow = new Date();
+    threeDaysFromNow.setDate(threeDaysFromNow.getDate() + 3);
+
+    if (req.user.isStoreOwner) {
+      // For store owners: Get all pending appointments
+      const stores = await Store.findAll({
+        where: { user_id: req.user.userId }
+      });
+      
+      const storeIds = stores.map(store => store.id);
+      
+      const appointments = await Appointment.findAll({
+        where: {
+          store_id: { [Op.in]: storeIds },
+          status: 'pending'
+        },
+        include: [
+          { model: User, attributes: ['full_name', 'email'] },
+          { model: Store, attributes: ['name'] }
+        ],
+        order: [['appointment_time', 'ASC']]
+      });
+
+      return res.json(appointments);
+    } else {
+      // For regular users: Get upcoming appointments within next 3 days
+      const appointments = await Appointment.findAll({
+        where: {
+          user_id: req.user.userId,
+          appointment_time: {
+            [Op.gte]: new Date(),
+            [Op.lte]: threeDaysFromNow
+          }
+        },
+        include: [{ model: Store, attributes: ['name'] }],
+        order: [['appointment_time', 'ASC']]
+      });
+
+      return res.json(appointments);
+    }
+  } catch (error) {
+    console.error('Error in getRecentAppointments:', error);
+    res.status(500).json({ 
+      message: 'Error fetching recent appointments',
+      error: error.message 
+    });
+  }
+};
+
 exports.getStoreBookedSlots = async (req, res) => {
   try {
     const { storeId } = req.params;
     const appointments = await Appointment.findAll({
       where: {
         store_id: storeId,
-        status: ['pending', 'approved'] // Only show pending and approved appointments
+        status: ['pending', 'approved']
       },
       attributes: ['id', 'appointment_time', 'duration_minutes', 'status']
     });
