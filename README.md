@@ -38,6 +38,8 @@ A full-stack web application for managing appointments between customers and bus
 - JWT for authentication
 
 ## Project Structure
+```
+
 appointment-booking-system/
 ├── client/                 # Frontend React application
 │   ├── src/
@@ -53,8 +55,7 @@ appointment-booking-system/
 ├── models/         # Database models
 ├── utils/          # Utility functions
 └── package.json    # Backend dependencies
-
-
+```
 ## Getting Started
 
 ### Prerequisites
@@ -75,6 +76,7 @@ cd server
 npm install
 ```
 3. Configure environment variables. Create a .env file in the server directory with the following variables:
+```
 DB_NAME=your_database_name
 DB_USER=your_database_user
 DB_PASS=your_database_password
@@ -86,6 +88,7 @@ EMAIL_PORT=your_smtp_port
 EMAIL_USER=your_email_user
 EMAIL_PASSWORD=your_email_password
 EMAIL_FROM=your_sender_email
+```
 4. Install frontend dependencies
 ```bash
 cd ../client
