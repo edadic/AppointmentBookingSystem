@@ -5,11 +5,13 @@ const {
   getStores, 
   getStore, 
   updateStore, 
-  deleteStore 
+  deleteStore,
+  searchStores 
 } = require('../controllers/storeController');
 
 const router = express.Router();
 
+router.get('/search', searchStores);
 // Public routes (protected but not restricted)
 router.use(protect);
 router.get('/', getStores);

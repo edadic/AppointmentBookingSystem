@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Navigation from '../components/Navigation';
+import { FiMapPin, FiMail, FiPhone, FiCalendar, FiClock } from 'react-icons/fi';
 import axios from 'axios';
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
@@ -110,135 +111,152 @@ const BookAppointment = () => {
   if (isLoading) return (
     <>
       <Navigation />
-      <div className="text-center mt-8">Loading...</div>
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+      </div>
     </>
   );
 
   return (
     <>
       <Navigation />
-      <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
         {store && (
-          <div className="bg-white shadow overflow-hidden sm:rounded-lg">
-            <div className="px-4 py-5 sm:px-6">
-              <h3 className="text-lg leading-6 font-medium text-gray-900">
-                {store.name}
-              </h3>
-              <p className="mt-1 max-w-2xl text-sm text-gray-500">
-                {store.description}
-              </p>
-            </div>
-            <div className="border-t border-gray-200">
-              <dl>
-                <div className="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                  <dt className="text-sm font-medium text-gray-500">Location</dt>
-                  <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                    {store.location}
-                  </dd>
-                </div>
-                <div className="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                  <dt className="text-sm font-medium text-gray-500">Contact Email</dt>
-                  <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                    {store.contact_email}
-                  </dd>
-                </div>
-                <div className="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                  <dt className="text-sm font-medium text-gray-500">Phone Number</dt>
-                  <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                    {store.phone_number}
-                  </dd>
-                </div>
-              </dl>
-            </div>
-
-            <div className="px-4 py-5 sm:px-6">
-              <h4 className="text-lg font-medium text-gray-900">Book an Appointment</h4>
-              {error && (
-                <div className="mt-2 text-sm text-red-600">
-                  {error}
-                </div>
-              )}
+          <div className="space-y-8">
+            {/* Store Information Card */}
+            <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+              <div className="bg-gradient-to-r from-blue-500 to-blue-600 px-6 py-4">
+                <h1 className="text-2xl font-bold text-white">{store.name}</h1>
+                <p className="text-blue-100 mt-1">{store.description}</p>
+              </div>
               
-              <button
-                onClick={() => setShowCalendar(!showCalendar)}
-                className="mb-4 inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-              >
-                {showCalendar ? 'Hide Calendar' : 'Show Calendar'}
-              </button>
+              <div className="p-6 grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="flex items-center space-x-3">
+                  <FiMapPin className="w-5 h-5 text-blue-500" />
+                  <div>
+                    <p className="text-sm font-medium text-gray-500">Location</p>
+                    <p className="text-gray-900">{store.location}</p>
+                  </div>
+                </div>
+                
+                <div className="flex items-center space-x-3">
+                  <FiMail className="w-5 h-5 text-blue-500" />
+                  <div>
+                    <p className="text-sm font-medium text-gray-500">Email</p>
+                    <p className="text-gray-900">{store.contact_email}</p>
+                  </div>
+                </div>
+                
+                <div className="flex items-center space-x-3">
+                  <FiPhone className="w-5 h-5 text-blue-500" />
+                  <div>
+                    <p className="text-sm font-medium text-gray-500">Phone</p>
+                    <p className="text-gray-900">{store.phone_number}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
 
-              {showCalendar && (
-                <div className="mb-6">
-                  <FullCalendar
-                    plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
-                    initialView="timeGridWeek"
-                    selectable={true}
-                    selectMirror={true}
-                    dayMaxEvents={true}
-                    weekends={true}
-                    businessHours={availableSlots}
-                    selectConstraint="businessHours"
-                    select={handleDateSelect}
-                    headerToolbar={{
-                      left: 'prev,next today',
-                      center: 'title',
-                      right: 'dayGridMonth,timeGridWeek'
-                    }}
-                    height="auto"
-                    slotMinTime="08:00:00"
-                    slotMaxTime="21:00:00"
-                    slotDuration="01:00:00"
-                    allDaySlot={false}
-                    slotLabelInterval="01:00"
-                    selectOverlap={false}
-                    slotEventOverlap={false}
-                    displayEventTime={true}
-                    nowIndicator={true}
-                    expandRows={true}
-                    selectMinDistance={1}
-                    eventDisplay="block"
-                    events={bookedSlots}
-                    eventContent={(eventInfo) => ({
-                      html: `<div class="text-xs font-semibold">${eventInfo.event.title}</div>`
-                    })}
-                  />
+            {/* Booking Section */}
+            <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+              <div className="p-6">
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-xl font-semibold text-gray-900">Book an Appointment</h2>
+                  <button
+                    onClick={() => setShowCalendar(!showCalendar)}
+                    className="inline-flex items-center px-4 py-2 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200"
+                  >
+                    <FiCalendar className="mr-2 -ml-1 h-5 w-5" />
+                    {showCalendar ? 'Hide Calendar' : 'Show Calendar'}
+                  </button>
                 </div>
-              )}
 
-              <form onSubmit={handleSubmit} className="mt-4 space-y-4">
-                <div>
-                  <label htmlFor="date" className="block text-sm font-medium text-gray-700">
-                    Date
-                  </label>
-                  <input
-                    type="date"
-                    id="date"
-                    required
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                    value={selectedDate}
-                    onChange={(e) => setSelectedDate(e.target.value)}
-                    min={new Date().toISOString().split('T')[0]}
-                  />
-                </div>
-                <div>
-                  <label htmlFor="time" className="block text-sm font-medium text-gray-700">
-                    Time
-                  </label>
-                  <input
-                    type="time"
-                    id="time"
-                    required
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                    value={selectedTime}
-                    onChange={(e) => setSelectedTime(e.target.value)}
-                  />
-                </div>
-                <button
-                  type="submit"
-                  className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                >
-                  Book Appointment
-                </button>
-              </form>
+                {error && (
+                  <div className="mb-4 p-4 rounded-lg bg-red-50 border border-red-200">
+                    <p className="text-sm text-red-600">{error}</p>
+                  </div>
+                )}
+
+                {showCalendar && (
+                  <div className="mb-8 rounded-lg border border-gray-200 overflow-hidden">
+                    <FullCalendar
+                      plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
+                      initialView="timeGridWeek"
+                      selectable={true}
+                      selectMirror={true}
+                      dayMaxEvents={true}
+                      weekends={true}
+                      businessHours={availableSlots}
+                      selectConstraint="businessHours"
+                      select={handleDateSelect}
+                      headerToolbar={{
+                        left: 'prev,next today',
+                        center: 'title',
+                        right: 'dayGridMonth,timeGridWeek'
+                      }}
+                      height="auto"
+                      slotMinTime="08:00:00"
+                      slotMaxTime="21:00:00"
+                      slotDuration="01:00:00"
+                      allDaySlot={false}
+                      slotLabelInterval="01:00"
+                      selectOverlap={false}
+                      slotEventOverlap={false}
+                      displayEventTime={true}
+                      nowIndicator={true}
+                      expandRows={true}
+                      selectMinDistance={1}
+                      eventDisplay="block"
+                      events={bookedSlots}
+                      eventContent={(eventInfo) => ({
+                        html: `<div class="text-xs font-semibold">${eventInfo.event.title}</div>`
+                      })}
+                    />
+                  </div>
+                )}
+
+                <form onSubmit={handleSubmit} className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <label className="flex items-center text-sm font-medium text-gray-700 mb-2">
+                        <FiCalendar className="mr-2 h-4 w-4 text-gray-400" />
+                        Date
+                      </label>
+                      <input
+                        type="date"
+                        required
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
+                        value={selectedDate}
+                        onChange={(e) => setSelectedDate(e.target.value)}
+                        min={new Date().toISOString().split('T')[0]}
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="flex items-center text-sm font-medium text-gray-700 mb-2">
+                        <FiClock className="mr-2 h-4 w-4 text-gray-400" />
+                        Time
+                      </label>
+                      <input
+                        type="time"
+                        required
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
+                        value={selectedTime}
+                        onChange={(e) => setSelectedTime(e.target.value)}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex justify-end">
+                    <button
+                      type="submit"
+                      className="inline-flex items-center px-6 py-3 border border-transparent rounded-lg shadow-sm text-base font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200"
+                    >
+                      Book Appointment
+                    </button>
+                  </div>
+                </form>
+              </div>
             </div>
           </div>
         )}

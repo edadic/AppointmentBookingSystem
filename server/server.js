@@ -28,6 +28,7 @@ const appointmentRoutes = require('./routes/appointment');
 app.use('/api', testRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
+
 app.use('/api/stores', storeRoutes);
 app.use('/api/availability', availabilityRoutes);
 app.use('/api/appointments', appointmentRoutes);

@@ -12,6 +12,7 @@ import StoreSettings from './pages/StoreSettings';
 import EditStore from './pages/EditStore'; 
 import Profile from './pages/Profile';
 import Notifications from './components/Notifications';
+import SearchStores from './pages/SearchStores';
 
 const App = () => {
   return (

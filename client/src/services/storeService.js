@@ -80,6 +80,16 @@ export const getStores = async () => {
   }
 };
 
+export const searchStores = async (params) => {
+  try {
+    const queryString = new URLSearchParams(params).toString();
+    const response = await axiosInstance.get(`/search?${queryString}`);
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || { message: 'Failed to search stores' };
+  }
+};
+
 export const deleteStore = async (id) => {
   try {
     await axiosInstance.delete(`/${id}`);

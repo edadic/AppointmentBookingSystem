@@ -125,47 +125,74 @@ const Navigation = () => {
               </button>
 
               {showNotifications && (
-                <div className="absolute right-0 mt-2 w-80 bg-white rounded-md shadow-lg py-1 z-50">
+                <div className="absolute right-0 mt-2 w-96 bg-white rounded-xl shadow-xl py-1 z-50 border border-gray-100">
+                  <div className="px-4 py-3 border-b border-gray-100">
+                    <h3 className="text-lg font-semibold text-gray-900">Notifications</h3>
+                  </div>
+                  
                   {notifications.length === 0 ? (
-                    <div className="px-4 py-2 text-sm text-gray-700">
-                      No new notifications
+                    <div className="px-4 py-6 text-center">
+                      <div className="mx-auto h-12 w-12 text-gray-400 mb-4">
+                        <BiBell className="h-full w-full" />
+                      </div>
+                      <p className="text-sm text-gray-500">No new notifications</p>
                     </div>
                   ) : (
-                    <div className="max-h-96 overflow-y-auto">
+                    <div className="max-h-[480px] overflow-y-auto">
                       {notifications.map((notification) => (
                         <div
                           key={notification.id}
-                          className="px-4 py-2 hover:bg-gray-100 border-b border-gray-200"
+                          className="px-4 py-3 hover:bg-gray-50 transition-colors duration-150 border-b border-gray-100 last:border-b-0"
                         >
-                          <div className="text-sm text-gray-700">
+                          <div className="space-y-2">
                             {isStoreOwner ? (
                               <>
-                                <p className="font-medium">New appointment request</p>
-                                <p>From: {notification.User?.full_name}</p>
-                                <p>Date: {new Date(notification.appointment_time).toLocaleDateString()}</p>
-                                <p>Time: {new Date(notification.appointment_time).toLocaleTimeString()}</p>
-                                <div className="mt-2 flex space-x-2">
+                                <div className="flex items-center justify-between">
+                                  <span className="text-sm font-medium text-blue-600">New appointment request</span>
+                                  <span className="text-xs text-gray-500">
+                                    {new Date(notification.appointment_time).toLocaleDateString()}
+                                  </span>
+                                </div>
+                                <p className="text-sm text-gray-600">From: {notification.User?.full_name}</p>
+                                <p className="text-sm text-gray-600">
+                                  Time: {new Date(notification.appointment_time).toLocaleTimeString()}
+                                </p>
+                                <div className="flex items-center space-x-2 pt-2">
                                   <button
                                     onClick={() => handleAppointmentAction(notification.id, 'approved')}
-                                    className="bg-green-500 hover:bg-green-600 text-white px-2 py-1 rounded text-xs"
+                                    className="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-150"
                                   >
                                     Accept
                                   </button>
                                   <button
                                     onClick={() => handleAppointmentAction(notification.id, 'rejected')}
-                                    className="bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded text-xs"
+                                    className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-150"
                                   >
-                                    Reject
+                                    Decline
                                   </button>
                                 </div>
                               </>
                             ) : (
                               <>
-                                <p className="font-medium">Upcoming Appointment</p>
-                                <p>Store: {notification.Store?.name}</p>
-                                <p>Date: {new Date(notification.appointment_time).toLocaleDateString()}</p>
-                                <p>Time: {new Date(notification.appointment_time).toLocaleTimeString()}</p>
-                                <p>Status: {notification.status}</p>
+                                <div className="flex items-center justify-between">
+                                  <span className="text-sm font-medium text-blue-600">Appointment Update</span>
+                                  <span className="text-xs text-gray-500">
+                                    {new Date(notification.appointment_time).toLocaleDateString()}
+                                  </span>
+                                </div>
+                                <p className="text-sm text-gray-600">Store: {notification.Store?.name}</p>
+                                <p className="text-sm text-gray-600">
+                                  Time: {new Date(notification.appointment_time).toLocaleTimeString()}
+                                </p>
+                                <span className={`inline-block px-3 py-1 text-xs font-medium rounded-full ${
+                                  notification.status === 'pending'
+                                    ? 'bg-yellow-100 text-yellow-800'
+                                    : notification.status === 'approved'
+                                    ? 'bg-green-100 text-green-800'
+                                    : 'bg-red-100 text-red-800'
+                                }`}>
+                                  {notification.status.charAt(0).toUpperCase() + notification.status.slice(1)}
+                                </span>
                               </>
                             )}
                           </div>
