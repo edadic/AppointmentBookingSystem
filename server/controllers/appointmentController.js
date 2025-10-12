@@ -201,50 +201,61 @@ exports.getStoreAppointments = async (req, res) => {
 
 exports.getRecentAppointments = async (req, res) => {
   try {
-    const threeDaysFromNow = new Date();
-    threeDaysFromNow.setDate(threeDaysFromNow.getDate() + 3);
-
+    let appointments;
+    
     if (req.user.isStoreOwner) {
-      // For store owners: Get all pending appointments
       const stores = await Store.findAll({
-        where: { user_id: req.user.userId }
+        where: { user_id: req.user.userId },
+        attributes: ['id']
       });
       
       const storeIds = stores.map(store => store.id);
       
-      const appointments = await Appointment.findAll({
+      appointments = await Appointment.findAll({
         where: {
           store_id: { [Op.in]: storeIds },
-          status: 'pending'
+          status: 'pending' 
         },
         include: [
-          { model: User, attributes: ['full_name', 'email'] },
-          { model: Store, attributes: ['name'] }
+          { 
+            model: User,
+            attributes: ['full_name', 'email']
+          },
+          {
+            model: Store,
+            attributes: ['name']
+          }
         ],
-        order: [['appointment_time', 'ASC']]
+        order: [['appointment_time', 'DESC']],
+        limit: 10
       });
-
-      return res.json(appointments);
     } else {
-      // For regular users: Get upcoming appointments within next 3 days
-      const appointments = await Appointment.findAll({
-        where: {
+      const now = new Date();
+      const threeDaysFromNow = new Date(now);
+      threeDaysFromNow.setDate(now.getDate() + 3);
+
+      appointments = await Appointment.findAll({
+        where: { 
           user_id: req.user.userId,
           appointment_time: {
-            [Op.gte]: new Date(),
-            [Op.lte]: threeDaysFromNow
+            [Op.between]: [now, threeDaysFromNow]
           }
         },
-        include: [{ model: Store, attributes: ['name'] }],
-        order: [['appointment_time', 'ASC']]
+        include: [
+          {
+            model: Store,
+            attributes: ['name']
+          }
+        ],
+        order: [['appointment_time', 'ASC']],
+        limit: 10
       });
-
-      return res.json(appointments);
     }
+
+    res.json(appointments);
   } catch (error) {
-    console.error('Error in getRecentAppointments:', error);
     res.status(500).json({ 
-      message: 'Error fetching recent appointments',
+      message: 'Error fetching recent appointments', 
       error: error.message 
     });
   }

@@ -18,7 +18,7 @@ router.get('/store/:storeId/booked', getStoreBookedSlots);
 router.use(protect);
 
 // Add the recent appointments route
-router.get('/recent', getRecentAppointments);
+router.get('/recent', protect, getRecentAppointments);
 
 // Routes for all authenticated users
 router.post('/', createAppointment);
